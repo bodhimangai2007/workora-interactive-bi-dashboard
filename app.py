@@ -6,11 +6,20 @@ import plotly.graph_objects as go
 from pathlib import Path
 
 st.set_page_config(page_title="Workora | Business Intelligence", page_icon="📊", layout="wide")
-ROOT = Path(__file__).parent
-DATA = ROOT / "data"
+ROOT = Path(__file__).resolve().parent
+# Support both layouts: datasets inside ./data/ (recommended) or beside app.py.
+DATA = ROOT / "data" if (ROOT / "data" / "web_traffic.csv").exists() else ROOT
 
 @st.cache_data
 def load_data():
+    required_files = ["web_traffic.csv", "customer_churn.csv", "regional_market.csv", "checkout_ab_test.csv"]
+    missing = [name for name in required_files if not (DATA / name).is_file()]
+    if missing:
+        raise FileNotFoundError(
+            "Missing dataset file(s): " + ", ".join(missing) +
+            f". Looked in: {DATA}. Put all four CSV files either in the repository root "
+            "beside app.py or inside a folder named 'data'."
+        )
     traffic = pd.read_csv(DATA / "web_traffic.csv", parse_dates=["Date"])
     churn = pd.read_csv(DATA / "customer_churn.csv")
     market = pd.read_csv(DATA / "regional_market.csv")
